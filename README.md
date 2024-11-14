@@ -1,3 +1,159 @@
+# Silent Speech
+
+This repo is to reproduce this project. 
+
+# EMG to Text Recognition
+> Convert silent speech (EMG signals) directly to text using deep learning
+
+This guide will help you set up and run the pretrained EMG-to-text recognition model, which achieves a Word Error Rate (WER) of approximately 28%.
+
+## Quick Links
+- [Pretrained Model](https://doi.org/10.5281/zenodo.7183877)
+- [EMG Dataset](https://doi.org/10.5281/zenodo.4064408)
+- [Language Model](https://github.com/mozilla/DeepSpeech/releases/download/v0.6.1/lm.binary)
+
+## System Requirements
+- Linux/Unix-based system (Windows not supported due to CTC decode library)
+- CUDA-capable GPU
+- Python 3.8 or higher
+- Git
+
+## Installation Steps
+
+1. **Clone the Repository**
+```bash
+git clone https://github.com/dgaddy/silent_speech.git
+cd silent_speech
+```
+
+2. **Set up Conda Environment**
+```bash
+# Create and activate environment
+conda env create -f environment.yml
+conda activate silent_speech
+
+# Install CTC decode library (Required for text recognition)
+pip install git+https://github.com/parlance/ctcdecode.git
+```
+
+3. **Download Required Files**
+
+```bash
+# Create directories
+mkdir -p models/recognition_model
+mkdir -p emg_data
+
+# Download pretrained model
+wget https://zenodo.org/record/7183877/files/recognition_model.pt -O models/recognition_model/model.pt
+
+# Download EMG dataset
+wget https://zenodo.org/record/4064408/files/emg_data.zip
+unzip emg_data.zip -d emg_data/
+
+# Download language model
+wget https://github.com/mozilla/DeepSpeech/releases/download/v0.6.1/lm.binary
+```
+
+4. **Initialize Submodules**
+```bash
+git submodule init
+git submodule update
+tar -xvzf text_alignments/text_alignments.tar.gz
+```
+
+## Directory Structure
+Your directory should look like this after setup:
+```
+silent_speech/
+├── models/
+│   └── recognition_model/
+│       └── model.pt
+├── emg_data/
+│   ├── nonparallel_data/
+│   ├── silent_parallel_data/
+│   └── voiced_parallel_data/
+├── lm.binary
+└── text_alignments/
+```
+
+## Usage
+
+### Running Inference
+To evaluate the pretrained model on the test set:
+```bash
+python recognition_model.py --evaluate_saved "./models/recognition_model/model.pt"
+```
+
+### Training a New Model
+If you want to train your own model:
+```bash
+python recognition_model.py --output_directory "./models/recognition_model_new/"
+```
+
+### Custom Data Processing
+To process your own EMG data, you'll need to format it similarly to the provided dataset. The EMG data should be:
+- Sampled at 1000Hz
+- Contain the same channel configuration as the original dataset
+- Preprocessed to remove artifacts and noise
+
+## Troubleshooting
+
+### Common Issues
+
+1. **CTC Decode Installation Error**
+```
+Error: If you see compilation errors during ctcdecode installation:
+Solution: Ensure you have build-essential and cmake installed:
+sudo apt-get install build-essential cmake
+```
+
+2. **CUDA Issues**
+```
+Error: CUDA not found or version mismatch
+Solution: Ensure CUDA 11.8 is installed and visible to conda:
+conda install cudatoolkit=11.8
+```
+
+3. **Dataset Loading Error**
+```
+Error: Cannot find EMG data directory
+Solution: Check if the emg_data directory contains the unzipped dataset files
+```
+
+### Additional Tips
+- Monitor GPU memory usage during inference - the model requires approximately 4GB VRAM
+- For large EMG files, process them in batches to avoid memory issues
+- Keep EMG signals properly calibrated and normalized for best results
+
+## Performance Metrics
+- Word Error Rate (WER): ~28% on test set
+- Processing Speed: ~0.1x realtime on NVIDIA RTX 3080
+- Memory Usage: ~4GB VRAM during inference
+
+## Citation
+If you use this model in your research, please cite:
+```bibtex
+@phdthesis{gaddy2022voicing,
+  title={Voicing Silent Speech},
+  author={Gaddy, David},
+  year={2022},
+  school={University of California, Berkeley}
+}
+```
+
+## Support
+For issues and questions:
+1. Check the [original repository issues](https://github.com/dgaddy/silent_speech/issues)
+2. Ensure your environment matches the requirements exactly
+3. Check the troubleshooting section above
+
+## License
+Check the original repository for license information.
+
+
+
+---
+
 # Voicing Silent Speech
 
 This repository contains code for synthesizing speech audio from silently mouthed words captured with electromyography (EMG).
