@@ -1,5 +1,3 @@
-# Replace the existing recognition_model_pyctcdecode.py with the corrected version
-%%writefile recognition_model_pyctcdecode.py
 import os
 import sys
 import numpy as np
