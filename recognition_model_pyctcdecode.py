@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import logging
 import subprocess
-from pyctcdecode import build_ctcdecoder  # Modified import
+from pyctcdecode import build_ctcdecoder
 import jiwer
 import tqdm
 
@@ -26,12 +26,14 @@ flags.DEFINE_integer('learning_rate_patience', 5, 'learning rate decay patience'
 flags.DEFINE_string('start_training_from', None, 'start training from this model')
 flags.DEFINE_float('l2', 0, 'weight decay')
 flags.DEFINE_string('evaluate_saved', None, 'run evaluation on given model file')
+flags.DEFINE_integer('num_epochs', 10, 'number of training epochs')  # Added flag
+flags.DEFINE_integer('batch_size', 16, 'training batch size')        # Added flag
 
 def test(model, testset, device):
     model.eval()
 
     # Build labels list with blank token at the end
-    labels = list(testset.text_transform.chars) + ['_']  # Modified labels
+    labels = list(testset.text_transform.chars) + ['_']
     decoder = build_ctcdecoder(
         labels,
         kenlm_model_path='lm.binary',
@@ -53,7 +55,7 @@ def test(model, testset, device):
             pred_np = pred[0].cpu().numpy()  # Shape: (time_steps, num_classes)
 
             # Decode using pyctcdecode
-            pred_text = decoder.decode(pred_np, beam_width=100, log_probs_input=True)  # Modified decoding
+            pred_text = decoder.decode(pred_np, beam_width=100, log_probs_input=True)
 
             target_text = testset.text_transform.clean_text(example['text'][0])
 
@@ -63,13 +65,13 @@ def test(model, testset, device):
     model.train()
     return jiwer.wer(references, predictions)
 
-def train_model(trainset, devset, device, n_epochs=200):
+def train_model(trainset, devset, device, n_epochs=FLAGS.num_epochs):  # Modified to use FLAGS.num_epochs
     dataloader = torch.utils.data.DataLoader(
         trainset,
         pin_memory=(device == 'cuda'),
         num_workers=0,
         collate_fn=EMGDataset.collate_raw,
-        batch_sampler=SizeAwareSampler(trainset, 128000)
+        batch_size=FLAGS.batch_size  # Modified to use FLAGS.batch_size
     )
 
     n_chars = len(devset.text_transform.chars)
@@ -133,6 +135,8 @@ def train_model(trainset, devset, device, n_epochs=200):
             f'finished epoch {epoch_idx + 1} - training loss: {train_loss:.4f} validation WER: {val * 100:.2f}'
         )
         torch.save(model.state_dict(), os.path.join(FLAGS.output_directory, 'model.pt'))
+        # Save model checkpoint after each epoch
+        torch.save(model.state_dict(), os.path.join(FLAGS.output_directory, f'model_epoch_{epoch_idx+1}.pt'))
 
     # Re-load best parameters
     model.load_state_dict(
