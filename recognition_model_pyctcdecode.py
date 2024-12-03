@@ -27,8 +27,8 @@ flags.DEFINE_integer('learning_rate_patience', 5, 'learning rate decay patience'
 flags.DEFINE_string('start_training_from', None, 'start training from this model')
 flags.DEFINE_float('l2', 0, 'weight decay')
 flags.DEFINE_string('evaluate_saved', None, 'run evaluation on given model file')
-flags.DEFINE_integer('num_epochs', 10, 'number of training epochs')  # Added flag
-flags.DEFINE_integer('batch_size', 16, 'training batch size')        # Added flag
+flags.DEFINE_integer('num_epochs', 5, 'number of training epochs')  # Adjusted as needed
+flags.DEFINE_integer('batch_size', 16, 'training batch size')        # Adjusted as needed
 
 def test(model, testset, device):
     model.eval()
