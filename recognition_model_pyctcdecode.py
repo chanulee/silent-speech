@@ -1,3 +1,5 @@
+# Replace the existing recognition_model_pyctcdecode.py with the corrected version
+%%writefile recognition_model_pyctcdecode.py
 import os
 import sys
 import numpy as np
@@ -19,7 +21,6 @@ from absl import flags
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('debug', False, 'debug')
 flags.DEFINE_string('output_directory', 'output', 'where to save models and outputs')
-flags.DEFINE_integer('batch_size', 32, 'training batch size')
 flags.DEFINE_float('learning_rate', 3e-4, 'learning rate')
 flags.DEFINE_integer('learning_rate_warmup', 1000, 'steps of linear warmup')
 flags.DEFINE_integer('learning_rate_patience', 5, 'learning rate decay patience')
@@ -65,13 +66,13 @@ def test(model, testset, device):
     model.train()
     return jiwer.wer(references, predictions)
 
-def train_model(trainset, devset, device, n_epochs=FLAGS.num_epochs):  # Modified to use FLAGS.num_epochs
+def train_model(trainset, devset, device, n_epochs=FLAGS.num_epochs):
     dataloader = torch.utils.data.DataLoader(
         trainset,
         pin_memory=(device == 'cuda'),
         num_workers=0,
         collate_fn=EMGDataset.collate_raw,
-        batch_size=FLAGS.batch_size  # Modified to use FLAGS.batch_size
+        batch_size=FLAGS.batch_size
     )
 
     n_chars = len(devset.text_transform.chars)
